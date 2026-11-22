@@ -53,6 +53,12 @@ Wichtige Parameter oben im Skript: `GLB_D`, `SPIEL_D`, `STAPEL`, `MAG_D`/`MAG_H`
 | v2b | M3x15 mit Muttern, U-Taschen im Träger, Flansch 5 mm |
 | v3 | Transport-Schutzdeckel vorne (Klemmzapfen) und hinten (magnetisch) – **aktuell** |
 
+## Lizenz
+
+GNU General Public License v3.0 – siehe [`LICENSE`](LICENSE). Gilt für Skript, STL-Dateien und Bilder:
+Nachbauen, Verändern und Weitergeben erlaubt, abgeleitete Versionen müssen ebenfalls unter GPL-3.0 stehen
+und den Quelltext (hier: `solarfilter_gen.py` bzw. die Modelldateien) mitliefern.
+
 ## ⚠️ Sicherheit
 
 Niemals ohne intakte, zertifizierte Solarfolie in die Sonne schauen oder fotografieren. Folie vor jedem Einsatz gegen
