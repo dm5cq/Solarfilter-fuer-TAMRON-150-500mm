@@ -10,6 +10,7 @@ Erzeugt (alle Masse in mm):
                                  8 Magnettaschen + Zentrierring -> Filterpaket haftet magnetisch am Traeger
   solarfilter_traeger.stl      - bleibt auf der GLB: Flansch mit 8 Magnettaschen, 8 U-Taschen fuer
                                  Muttern/Schraubenenden + geschlitztes Rohr
+  solarfilter_schutz_frontdeckel.stl / _rueckdeckel.stl - Transportschutz fuer das Filterpaket
   solarfilter_passring.stl     - kurzer Testring mit gleichem Innen-D wie das Rohr (Passprobe)
 
 Benoetigt nur numpy, scipy, matplotlib.  Aufruf: python3 solarfilter_gen.py [Ausgabeordner]
@@ -388,13 +389,53 @@ def rueckrahmen():
     m.slab(RUECK_DICKE, RUECK_DICKE + ZENTRIER_H, [ring_o, ap])
     return m.build()
 
+# ------------------------------------------------- Transport-Schutzdeckel
+DECKEL_DICKE = 5.0     # beide Schutzdeckel
+KOPF_H       = 3.3     # Tasche fuer Schraubenkoepfe (DIN 912: D5,5 x 3,0 / ISO 7380: D5,7 x 1,65), Breite = MUTTER_TASCHE_B
+ZAPFEN_SP    = 0.15    # Spiel je Seite: Frontdeckel-Zapfen im Fenster (Reibschluss)
+ZAPFEN_H     = 2.0     # Fensterlippe ist 2,5 tief -> 0,5 mm Luft zum Plexi
+
+def rueckdeckel():
+    """Schutzplatte hinten, haelt magnetisch am Rueckrahmen (Magnete gepolt wie im Traeger).
+    Druck: Magnetseite aufs Bett."""
+    m = Mesh2p5D()
+    ri = (GLB_D + SPIEL_D)/2
+    r_ap = ri - LIPPE
+    outer = m.loop(outline()); outer_n = m.loop(outline(True))
+    rec = m.loop(circle(0, 0, r_ap))                   # Vertiefung fuer den Zentrierring
+    mags = [m.loop(circle(x, y, (MAG_D+MAG_SPIEL)/2, 64)) for x, y in magnet_positions()]
+    zr = ZENTRIER_H + 0.4
+    zm = MAG_H + 0.1
+    zn = SCHR_LAENGE - (FRONT_LIPPE + STAPEL) - RUECK_DICKE + 0.4
+    cuts = sorted(set([0, zr, zm, zn, DECKEL_DICKE]))
+    for a, b in zip(cuts[:-1], cuts[1:]):
+        L = [outer_n if b <= zn + 1e-9 else outer]
+        if b <= zr + 1e-9: L.append(rec)
+        if b <= zm + 1e-9: L += mags
+        m.slab(a, b, L)
+    return m.build()
+
+def frontdeckel():
+    """Schutzplatte vorne (Sonnenseite): Zapfen klemmt im Fenster des Frontrahmens.
+    Druck: Aussenseite aufs Bett, Zapfen oben."""
+    m = Mesh2p5D()
+    outer = m.loop(outline()); outer_n = m.loop(outline(True))   # U-Taschen fuer die Schraubenkoepfe
+    plug = m.loop(rrect(FENSTER-2*ZAPFEN_SP, FENSTER-2*ZAPFEN_SP, FENSTER_R-ZAPFEN_SP))
+    zk = DECKEL_DICKE - KOPF_H
+    m.slab(0, zk, [outer])
+    m.slab(zk, DECKEL_DICKE, [outer_n])
+    m.slab(DECKEL_DICKE, DECKEL_DICKE + ZAPFEN_H, [plug])
+    return m.build()
+
 if __name__ == '__main__':
     out = sys.argv[1] if len(sys.argv) > 1 else '.'
     os.makedirs(out, exist_ok=True)
     for name, fn in [('solarfilter_frontrahmen', frontrahmen),
                      ('solarfilter_rueckrahmen', rueckrahmen),
                      ('solarfilter_traeger', traeger),
-                     ('solarfilter_passring', lambda: traeger(True))]:
+                     ('solarfilter_passring', lambda: traeger(True)),
+                     ('solarfilter_schutz_rueckdeckel', rueckdeckel),
+                     ('solarfilter_schutz_frontdeckel', frontdeckel)]:
         t = fn(); bad, vol = check(t)
         save_stl(os.path.join(out, name+'.stl'), t, name)
         mn, mx = t.reshape(-1, 3).min(0), t.reshape(-1, 3).max(0)
