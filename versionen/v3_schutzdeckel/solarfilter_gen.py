@@ -3,7 +3,7 @@
 Solarfilter-Halter fuer Tamron 150-500mm F5-6.7 Di III VC VXD (A057) mit Gegenlichtblende HA057
 Plexi (2 mm) + Solarfolie + Plexi (2 mm), Plattenformat 200 x 200 mm.
 Autor: Stefan J. Kaiser DM5CQ / OE8KKS
-Lizenz: GNU GPL v3.0 (siehe LICENSE)
+Lizenz: CC BY-NC-SA 4.0 (siehe LICENSE.md)
 
 Erzeugt (alle Masse in mm):
   solarfilter_frontrahmen.stl  - Sonnenseite, Tasche fuer den Plexi-Folie-Plexi-Stapel

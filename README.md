@@ -55,9 +55,10 @@ Wichtige Parameter oben im Skript: `GLB_D`, `SPIEL_D`, `STAPEL`, `MAG_D`/`MAG_H`
 
 ## Lizenz
 
-GNU General Public License v3.0 – siehe [`LICENSE`](LICENSE). Gilt für Skript, STL-Dateien und Bilder:
-Nachbauen, Verändern und Weitergeben erlaubt, abgeleitete Versionen müssen ebenfalls unter GPL-3.0 stehen
-und den Quelltext (hier: `solarfilter_gen.py` bzw. die Modelldateien) mitliefern.
+[![CC BY-NC-SA 4.0](https://img.shields.io/badge/Lizenz-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/deed.de)
+
+**CC BY-NC-SA 4.0** – siehe [`LICENSE.md`](LICENSE.md). Nachbauen und Verändern erlaubt, mit Namensnennung
+(Stefan J. Kaiser DM5CQ / OE8KKS), **nicht kommerziell** und Weitergabe nur unter gleichen Bedingungen.
 
 ## ⚠️ Sicherheit
 
