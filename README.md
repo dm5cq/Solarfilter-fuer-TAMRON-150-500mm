@@ -3,19 +3,22 @@
 3D-druckbarer Halter für Solarfolie zwischen zwei Plexiglasplatten (200 × 200 mm, je 2 mm), aufgesteckt auf die
 Original-Gegenlichtblende **HA057** (Außen-Ø vorne am Gummiring gemessen: 113,05 mm).
 Das Filterpaket hält magnetisch am Träger und lässt sich für die Totalität mit einem Griff abnehmen.
+Für den Transport haften Frontdeckel und Rückdeckel ebenfalls magnetisch am Filterpaket.
 
 Autor: **Stefan J. Kaiser DM5CQ / OE8KKS** · Material: PETG-CF · Konstruktion mit Unterstützung von Claude (Anthropic)
 
 ![Vorschau](bilder/solarfilter_vorschau.png)
+
+![Schutzdeckel](bilder/schutzdeckel_vorschau.png)
 
 ## Teile (Ordner `stl/`)
 
 | Datei | Funktion | Drucklage |
 |---|---|---|
 | `solarfilter_traeger.stl` | bleibt auf der GLB: Flansch mit 8 Magnettaschen + U-Taschen für Muttern, geschlitztes Rohr Ø114,05 | Flansch aufs Bett |
-| `solarfilter_frontrahmen.stl` | Sonnenseite, Tasche 201 × 201 × 5 mm für Plexi / Folie / Plexi | Sonnenseite aufs Bett |
+| `solarfilter_frontrahmen.stl` | Sonnenseite, Tasche 201 × 201 × 5 mm für Plexi / Folie / Plexi, 4 Magnete in den Ecken | Sonnenseite aufs Bett |
 | `solarfilter_rueckrahmen.stl` | hinterer Rahmen, 8 Magnete, Zentrierring | Plexi-Seite aufs Bett |
-| `solarfilter_schutz_frontdeckel.stl` | Transportschutz vorne, Zapfen klemmt im Fenster | Außenseite aufs Bett |
+| `solarfilter_schutz_frontdeckel.stl` | Transportschutz vorne, magnetisch (4 Magnete), Zapfen im Fenster | Außenseite aufs Bett |
 | `solarfilter_schutz_rueckdeckel.stl` | Transportschutz hinten, magnetisch | Magnetseite aufs Bett |
 | `solarfilter_passring.stl` | nur Passprobe auf der GLB (wird nicht eingebaut) | beliebig |
 
@@ -24,14 +27,17 @@ Kein Stützmaterial nötig. PETG-CF → gehärtete Düse; 3–4 Wände, 10–25 
 ## Zubehör
 
 - 8 × M3x15 + 8 × M3-Mutter (Filterpaket verschrauben, Köpfe auf der Sonnenseite)
-- 24 × Neodym-Magnet Ø10 × 3 mm (8 Träger, 8 Rückrahmen, 8 Rückdeckel), eingeklebt
-  - Träger und Rückdeckel: alle Magnete **gleich** gepolt; Rückrahmen: **Gegenpol** außen
+- 32 × Neodym-Magnet Ø10 × 3 mm, eingeklebt
+  - 8 Träger + 8 Rückdeckel: alle **gleich** gepolt · 8 Rückrahmen: **Gegenpol** außen
+  - 4 Frontrahmen (stehen 1 mm vor) + 4 Frontdeckel (sitzen unten in der 4,2 mm tiefen Tasche): zueinander **gegenpolig**
 - Klettband für die Nut am Rohr (Sicherung gegen Abfallen)
 - 2 × Plexiglas 200 × 200 × 2 mm, Solarfolie (z. B. Baader AstroSolar)
 
 ## Aufbau
 
 Sonne → Frontrahmen → Plexi → Folie → Plexi → Rückrahmen ‖ *Magnet-Trennfuge* ‖ Träger → Gegenlichtblende → Objektiv
+
+Transport: Frontdeckel ‖ Filterpaket ‖ Rückdeckel (oder statt Rückdeckel der Träger) – alles magnetisch.
 
 ## Anpassen
 
@@ -51,7 +57,8 @@ Wichtige Parameter oben im Skript: `GLB_D`, `SPIEL_D`, `STAPEL`, `MAG_D`/`MAG_H`
 | v1 | Plexi-Folie-Plexi-Tasche 5 mm, Träger mit Flansch + Federzungen-Rohr für GLB Ø113,05, Passring |
 | v2a | Magnet-Schnellwechsel: Rückrahmen mit 8 Magneten + Zentrierring, Einschmelzmuttern |
 | v2b | M3x15 mit Muttern, U-Taschen im Träger, Flansch 5 mm |
-| v3 | Transport-Schutzdeckel vorne (Klemmzapfen) und hinten (magnetisch) – **aktuell** |
+| v3 | Transport-Schutzdeckel vorne (Klemmzapfen) und hinten (magnetisch) |
+| v4 | Frontdeckel magnetisch: je 4 Magnete in Frontrahmen und Frontdeckel, Frontdeckel 6 mm – **aktuell** |
 
 ## Lizenz
 

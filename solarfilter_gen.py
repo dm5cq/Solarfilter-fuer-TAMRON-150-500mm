@@ -294,7 +294,9 @@ def frontrahmen():
     holes = [m.loop(circle(x, y, SCHRAUBE_D/2, 32)) for x, y in screw_positions()]
     win = m.loop(rrect(FENSTER, FENSTER, FENSTER_R))
     pocket = m.loop(pocket_relief(PLATTE+PLATTE_SPIEL, 1.6))
-    m.slab(0, FRONT_LIPPE, [outer, win] + holes)
+    fm = [m.loop(circle(x, y, (MAG_D+MAG_SPIEL)/2, 64)) for x, y in front_magnet_positions()]
+    m.slab(0, FRONT_MAG_TIEFE, [outer, win] + holes + fm)
+    m.slab(FRONT_MAG_TIEFE, FRONT_LIPPE, [outer, win] + holes)
     m.slab(FRONT_LIPPE, FRONT_LIPPE+STAPEL, [outer, pocket] + holes)
     return m.build()
 
@@ -390,8 +392,16 @@ def rueckrahmen():
     m.slab(RUECK_DICKE, RUECK_DICKE + ZENTRIER_H, [ring_o, ap])
     return m.build()
 
+# --- Frontdeckel-Magnete (v4): 4 Magnete in den Ecken der vorderen Lippe des Frontrahmens
+FRONT_MAG_POS   = 96.0  # Mittelpunkt (+-x, +-y), zwischen Fensterecke und Rahmenecke
+FRONT_MAG_TIEFE = 2.0   # Tasche im Frontrahmen (Lippe 2,5 -> 0,5 mm Boden zum Plexi); Magnet steht 1 mm vor
+def front_magnet_positions():
+    a = FRONT_MAG_POS
+    return [(a, a), (-a, a), (-a, -a), (a, -a)]
+
 # ------------------------------------------------- Transport-Schutzdeckel
-DECKEL_DICKE = 5.0     # beide Schutzdeckel
+DECKEL_DICKE = 5.0     # Rueckdeckel
+FRONTDECKEL_DICKE = 6.0  # Frontdeckel (Magnettaschen 4,2 tief -> 1,8 mm Boden)
 KOPF_H       = 3.3     # Tasche fuer Schraubenkoepfe (DIN 912: D5,5 x 3,0 / ISO 7380: D5,7 x 1,65), Breite = MUTTER_TASCHE_B
 ZAPFEN_SP    = 0.15    # Spiel je Seite: Frontdeckel-Zapfen im Fenster (Reibschluss)
 ZAPFEN_H     = 2.0     # Fensterlippe ist 2,5 tief -> 0,5 mm Luft zum Plexi
@@ -422,10 +432,17 @@ def frontdeckel():
     m = Mesh2p5D()
     outer = m.loop(outline()); outer_n = m.loop(outline(True))   # U-Taschen fuer die Schraubenkoepfe
     plug = m.loop(rrect(FENSTER-2*ZAPFEN_SP, FENSTER-2*ZAPFEN_SP, FENSTER_R-ZAPFEN_SP))
-    zk = DECKEL_DICKE - KOPF_H
-    m.slab(0, zk, [outer])
-    m.slab(zk, DECKEL_DICKE, [outer_n])
-    m.slab(DECKEL_DICKE, DECKEL_DICKE + ZAPFEN_H, [plug])
+    D = FRONTDECKEL_DICKE
+    fm = [m.loop(circle(x, y, (MAG_D+MAG_SPIEL)/2, 64)) for x, y in front_magnet_positions()]
+    vor = MAG_H - FRONT_MAG_TIEFE                      # Ueberstand der Frontrahmen-Magnete
+    zt = D - (MAG_H + vor + 0.2)                       # eigener Magnet unten, Gegenmagnet greift oben hinein
+    zk = D - KOPF_H
+    cuts = sorted(set([0, zt, zk, D]))
+    for a, b in zip(cuts[:-1], cuts[1:]):
+        L = [outer_n if a >= zk - 1e-9 else outer]
+        if a >= zt - 1e-9: L += fm
+        m.slab(a, b, L)
+    m.slab(D, D + ZAPFEN_H, [plug])
     return m.build()
 
 if __name__ == '__main__':
