@@ -11,13 +11,15 @@ Autor: **Stefan J. Kaiser DM5CQ / OE8KKS** · Material: PETG-CF · Konstruktion 
 
 ![Schutzdeckel](bilder/schutzdeckel_vorschau.png)
 
+![Magnete v5](bilder/magnet_v5_schnitt.png)
+
 ## Teile (Ordner `stl/`)
 
 | Datei | Funktion | Drucklage |
 |---|---|---|
-| `solarfilter_traeger.stl` | bleibt auf der GLB: Flansch mit 8 Magnettaschen + U-Taschen für Muttern, geschlitztes Rohr Ø114,05 | Flansch aufs Bett |
+| `solarfilter_traeger.stl` | bleibt auf der GLB: Flansch mit 8 Magnettaschen (offen zur Kameraseite) + U-Taschen für Muttern, geschlitztes Rohr Ø114,05 | Flansch aufs Bett |
 | `solarfilter_frontrahmen.stl` | Sonnenseite, Tasche 201 × 201 × 5 mm für Plexi / Folie / Plexi, 4 Magnete in den Ecken | Sonnenseite aufs Bett |
-| `solarfilter_rueckrahmen.stl` | hinterer Rahmen, 8 Magnete, Zentrierring | Plexi-Seite aufs Bett |
+| `solarfilter_rueckrahmen.stl` | hinterer Rahmen, 8 Magnettaschen auf der Innenseite (von Plexi + Frontrahmen eingeschlossen), Zentrierring | Plexi-Seite aufs Bett |
 | `solarfilter_schutz_frontdeckel.stl` | Transportschutz vorne, magnetisch (4 Magnete), Zapfen im Fenster | Außenseite aufs Bett |
 | `solarfilter_schutz_rueckdeckel.stl` | Transportschutz hinten, magnetisch | Magnetseite aufs Bett |
 | `solarfilter_passring.stl` | nur Passprobe auf der GLB (wird nicht eingebaut) | beliebig |
@@ -28,7 +30,9 @@ Kein Stützmaterial nötig. PETG-CF → gehärtete Düse; 3–4 Wände, 10–25 
 
 - 8 × M3x15 + 8 × M3-Mutter (Filterpaket verschrauben, Köpfe auf der Sonnenseite)
 - 32 × Neodym-Magnet Ø10 × 3 mm, eingeklebt
-  - 8 Träger + 8 Rückdeckel: alle **gleich** gepolt · 8 Rückrahmen: **Gegenpol** außen
+  - 8 Träger + 8 Rückdeckel: alle **gleich** gepolt · 8 Rückrahmen: **Gegenpol** zur Trennfuge
+  - Träger und Rückrahmen: Magnete liegen hinter 0,6 mm Haut, die Trennfuge ist glatt. Im Rückrahmen halten
+    Plexi und Frontrahmen die Magnete fest – Kleben optional.
   - 4 Frontrahmen (stehen 1 mm vor) + 4 Frontdeckel (sitzen unten in der 4,2 mm tiefen Tasche): zueinander **gegenpolig**
 - Klettband für die Nut am Rohr (Sicherung gegen Abfallen)
 - 2 × Plexiglas 200 × 200 × 2 mm, Solarfolie (z. B. Baader AstroSolar)
@@ -58,7 +62,8 @@ Wichtige Parameter oben im Skript: `GLB_D`, `SPIEL_D`, `STAPEL`, `MAG_D`/`MAG_H`
 | v2a | Magnet-Schnellwechsel: Rückrahmen mit 8 Magneten + Zentrierring, Einschmelzmuttern |
 | v2b | M3x15 mit Muttern, U-Taschen im Träger, Flansch 5 mm |
 | v3 | Transport-Schutzdeckel vorne (Klemmzapfen) und hinten (magnetisch) |
-| v4 | Frontdeckel magnetisch: je 4 Magnete in Frontrahmen und Frontdeckel, Frontdeckel 6 mm – **aktuell** |
+| v4 | Frontdeckel magnetisch: je 4 Magnete in Frontrahmen und Frontdeckel, Frontdeckel 6 mm |
+| v5 | Magnettaschen Träger zur Kameraseite, Rückrahmen zur Innenseite (0,6 mm Haut) – **aktuell** |
 
 ## Lizenz
 

@@ -8,8 +8,8 @@ Lizenz: CC BY-NC-SA 4.0 (siehe LICENSE.md)
 Erzeugt (alle Masse in mm):
   solarfilter_frontrahmen.stl  - Sonnenseite, Tasche fuer den Plexi-Folie-Plexi-Stapel
   solarfilter_rueckrahmen.stl  - hinterer Deckel, mit Frontrahmen verschraubt (8x M3x15 + Mutter),
-                                 8 Magnettaschen + Zentrierring -> Filterpaket haftet magnetisch am Traeger
-  solarfilter_traeger.stl      - bleibt auf der GLB: Flansch mit 8 Magnettaschen, 8 U-Taschen fuer
+                                 8 Magnettaschen innen (unter Plexi/Frontrahmen eingeschlossen) + Zentrierring
+  solarfilter_traeger.stl      - bleibt auf der GLB: Flansch mit 8 Magnettaschen (Kameraseite), 8 U-Taschen fuer
                                  Muttern/Schraubenenden + geschlitztes Rohr
   solarfilter_schutz_frontdeckel.stl / _rueckdeckel.stl - Transportschutz fuer das Filterpaket
   solarfilter_passring.stl     - kurzer Testring mit gleichem Innen-D wie das Rohr (Passprobe)
@@ -50,7 +50,8 @@ PASSRING_H   = 8.0
 # --- Schnellwechsel per Neodym-Magnet (Traeger bleibt auf der GLB)
 MAG_D        = 10.0    # Magnet-Durchmesser
 MAG_H        = 3.0     # Magnet-Hoehe (ANNAHME 10x3 mm -> anpassen!)
-MAG_SPIEL    = 0.2     # Tasche = MAG_D + Spiel (Magnete einkleben)
+MAG_SPIEL    = 0.2     # Tasche = MAG_D + Spiel
+MAG_HAUT     = 0.6     # v5: geschlossene Haut zur Trennfuge (Traeger + Rueckrahmen), Magnete liegen dahinter
 MAG_POS      = 100.5   # Magnetreihe: 4 Ecken + 4 Kantenmitten
 RUECK_DICKE  = 4.5     # Rueckrahmen (haelt den Plattenstapel, traegt Magnete + Einschmelzmuttern)
 SCHR_LAENGE  = 15.0    # M3x15: Frontrahmen + Rueckrahmen + Mutter
@@ -353,14 +354,14 @@ def traeger(passring=False):
     holes = [m.loop(circle(x, y, SCHRAUBE_D/2, 32)) for x, y in screw_positions()]
     wins = corner_windows(m, ro + 7.0)          # Leichtbau-Fenster, Lichtweg unberuehrt
     mags = [m.loop(circle(x, y, (MAG_D+MAG_SPIEL)/2, 64)) for x, y in magnet_positions()]
-    zm = MAG_H + 0.1
+    zm = MAG_HAUT                                  # Taschen ab Haut bis Flanschoberseite (Kameraseite)
     # Ueberstand Schraube hinter dem Rueckrahmen = Laenge - Frontrahmen - Rueckrahmen (+0,4 Luft)
     zn = SCHR_LAENGE - (FRONT_LIPPE + STAPEL) - RUECK_DICKE + 0.4
     cuts = sorted(set([0, zm, zn, FLANSCH]))
     for a, b in zip(cuts[:-1], cuts[1:]):
         L = [outer_n if b <= zn + 1e-9 else outer, ap] + wins
         if b > zn + 1e-9: L += holes
-        if b <= zm + 1e-9: L += mags
+        if a >= zm - 1e-9: L += mags
         m.slab(a, b, L)
     z = FLANSCH
     zs = z + SCHLITZ_START
@@ -386,9 +387,9 @@ def rueckrahmen():
     ins = [m.loop(circle(x, y, SCHRAUBE_D/2, 32)) for x, y in screw_positions()]
     wins = corner_windows(m, ri + ROHR_WAND + 7.0)
     mags = [m.loop(circle(x, y, (MAG_D+MAG_SPIEL)/2, 64)) for x, y in magnet_positions()]
-    zm = RUECK_DICKE - (MAG_H + 0.1)
-    m.slab(0, zm, [outer, ap] + ins + wins)
-    m.slab(zm, RUECK_DICKE, [outer, ap] + ins + wins + mags)
+    zm = RUECK_DICKE - MAG_HAUT                    # Taschen offen zur Plexi-Seite, Haut zur Trennfuge
+    m.slab(0, zm, [outer, ap] + ins + wins + mags)
+    m.slab(zm, RUECK_DICKE, [outer, ap] + ins + wins)
     m.slab(RUECK_DICKE, RUECK_DICKE + ZENTRIER_H, [ring_o, ap])
     return m.build()
 
