@@ -40,6 +40,13 @@ Beide Varianten sind vollständig und gleichwertig – sie unterscheiden sich nu
 
 Kein Stützmaterial nötig. PETG-CF → gehärtete Düse; 3–4 Wände, 10–25 % Infill. Druckbett ≥ 216 × 216 mm.
 
+## Zusatztool: Hebelwerkzeug
+
+Zum Abhebeln der Filtereinheit vom Träger: Griff Ø20 × 50 mm mit Lanyard-Bohrung, Spachtel 18 × 23 × 1,5 mm,
+stehend mit Stützmaterial zu drucken → [`zubehoer/hebelwerkzeug`](zubehoer/hebelwerkzeug)
+
+<img src="zubehoer/hebelwerkzeug/hebelwerkzeug_vorschau.png" width="500">
+
 ## Zubehör
 
 - 8 × M3x15 + 8 × M3-Mutter (Filterpaket verschrauben, Köpfe auf der Sonnenseite)
