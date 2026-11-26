@@ -14,7 +14,9 @@ Erzeugt (alle Masse in mm):
   solarfilter_schutz_frontdeckel.stl / _rueckdeckel.stl - Transportschutz fuer das Filterpaket
   solarfilter_passring.stl     - kurzer Testring mit gleichem Innen-D wie das Rohr (Passprobe)
 
-Benoetigt nur numpy, scipy, matplotlib.  Aufruf: python3 solarfilter_gen.py [Ausgabeordner]
+Benoetigt nur numpy, scipy, matplotlib.  Aufruf: python3 solarfilter_gen.py [Ausgabeordner] [A|B]
+Variante A: Magnettaschen offen zur Trennfuge (Magnete buendig, einkleben)
+Variante B: Magnete innen hinter 0,6 mm Haut (Rueckrahmen: von Plexi eingeschlossen)
 """
 import sys, os, struct
 import numpy as np
@@ -51,7 +53,8 @@ PASSRING_H   = 8.0
 MAG_D        = 10.0    # Magnet-Durchmesser
 MAG_H        = 3.0     # Magnet-Hoehe (ANNAHME 10x3 mm -> anpassen!)
 MAG_SPIEL    = 0.2     # Tasche = MAG_D + Spiel
-MAG_HAUT     = 0.6     # v5: geschlossene Haut zur Trennfuge (Traeger + Rueckrahmen), Magnete liegen dahinter
+MAG_HAUT     = 0.6     # Variante B: geschlossene Haut zur Trennfuge (Traeger + Rueckrahmen), Magnete liegen dahinter
+VARIANTE     = 'B'     # 'A' = Magnettaschen offen zur Trennfuge (v4), 'B' = Magnete innen hinter 0,6 mm Haut (v5)
 MAG_POS      = 100.5   # Magnetreihe: 4 Ecken + 4 Kantenmitten
 RUECK_DICKE  = 4.5     # Rueckrahmen (haelt den Plattenstapel, traegt Magnete + Einschmelzmuttern)
 SCHR_LAENGE  = 15.0    # M3x15: Frontrahmen + Rueckrahmen + Mutter
@@ -354,14 +357,15 @@ def traeger(passring=False):
     holes = [m.loop(circle(x, y, SCHRAUBE_D/2, 32)) for x, y in screw_positions()]
     wins = corner_windows(m, ro + 7.0)          # Leichtbau-Fenster, Lichtweg unberuehrt
     mags = [m.loop(circle(x, y, (MAG_D+MAG_SPIEL)/2, 64)) for x, y in magnet_positions()]
-    zm = MAG_HAUT                                  # Taschen ab Haut bis Flanschoberseite (Kameraseite)
+    innen = VARIANTE == 'B'
+    zm = MAG_HAUT if innen else MAG_H + 0.1        # B: Taschen von der Kameraseite / A: offen zur Filterseite
     # Ueberstand Schraube hinter dem Rueckrahmen = Laenge - Frontrahmen - Rueckrahmen (+0,4 Luft)
     zn = SCHR_LAENGE - (FRONT_LIPPE + STAPEL) - RUECK_DICKE + 0.4
     cuts = sorted(set([0, zm, zn, FLANSCH]))
     for a, b in zip(cuts[:-1], cuts[1:]):
         L = [outer_n if b <= zn + 1e-9 else outer, ap] + wins
         if b > zn + 1e-9: L += holes
-        if a >= zm - 1e-9: L += mags
+        if (a >= zm - 1e-9) if innen else (b <= zm + 1e-9): L += mags
         m.slab(a, b, L)
     z = FLANSCH
     zs = z + SCHLITZ_START
@@ -387,9 +391,14 @@ def rueckrahmen():
     ins = [m.loop(circle(x, y, SCHRAUBE_D/2, 32)) for x, y in screw_positions()]
     wins = corner_windows(m, ri + ROHR_WAND + 7.0)
     mags = [m.loop(circle(x, y, (MAG_D+MAG_SPIEL)/2, 64)) for x, y in magnet_positions()]
-    zm = RUECK_DICKE - MAG_HAUT                    # Taschen offen zur Plexi-Seite, Haut zur Trennfuge
-    m.slab(0, zm, [outer, ap] + ins + wins + mags)
-    m.slab(zm, RUECK_DICKE, [outer, ap] + ins + wins)
+    if VARIANTE == 'B':                            # Taschen offen zur Plexi-Seite, Haut zur Trennfuge
+        zm = RUECK_DICKE - MAG_HAUT
+        m.slab(0, zm, [outer, ap] + ins + wins + mags)
+        m.slab(zm, RUECK_DICKE, [outer, ap] + ins + wins)
+    else:                                          # Taschen offen zur Trennfuge (Magnet buendig)
+        zm = RUECK_DICKE - (MAG_H + 0.1)
+        m.slab(0, zm, [outer, ap] + ins + wins)
+        m.slab(zm, RUECK_DICKE, [outer, ap] + ins + wins + mags)
     m.slab(RUECK_DICKE, RUECK_DICKE + ZENTRIER_H, [ring_o, ap])
     return m.build()
 
@@ -447,7 +456,10 @@ def frontdeckel():
     return m.build()
 
 if __name__ == '__main__':
+    # Aufruf: python3 solarfilter_gen.py [Ausgabeordner] [A|B]
     out = sys.argv[1] if len(sys.argv) > 1 else '.'
+    if len(sys.argv) > 2: VARIANTE = sys.argv[2].upper()
+    print('Variante', VARIANTE)
     os.makedirs(out, exist_ok=True)
     for name, fn in [('solarfilter_frontrahmen', frontrahmen),
                      ('solarfilter_rueckrahmen', rueckrahmen),
