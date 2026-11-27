@@ -42,8 +42,9 @@ Kein Stützmaterial nötig. PETG-CF → gehärtete Düse; 3–4 Wände, 10–25 
 
 ## Zusatztool: Hebelwerkzeug
 
-Zum Abhebeln der Filtereinheit vom Träger: Griff Ø20 × 50 mm mit Lanyard-Bohrung, Spachtel 18 × 23 × 1,5 mm,
-stehend mit Stützmaterial zu drucken → [`zubehoer/hebelwerkzeug`](zubehoer/hebelwerkzeug)
+Zum Abhebeln der Filtereinheit vom Träger: Griff Ø20 × 50 mm mit Lanyard-Bohrung und eingedrucktem Magnet
+(Ø10 × 3), Spachtel 18 × 23 × 1,5 mm mittig. Liegend gedruckt, 3MF mit eingebetteten Einstellungen
+(100 % Infill, 6 Wände, Druckpause für den Magneten) → [`zubehoer/hebelwerkzeug`](zubehoer/hebelwerkzeug)
 
 <img src="zubehoer/hebelwerkzeug/hebelwerkzeug_vorschau.png" width="500">
 

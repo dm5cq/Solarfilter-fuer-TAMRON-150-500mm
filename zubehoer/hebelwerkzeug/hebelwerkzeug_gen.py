@@ -7,11 +7,15 @@ Lizenz: CC BY-NC-SA 4.0 (siehe LICENSE.md)
 Griff Ø20 x 50 mm (hinten halbkugelig gerundet, Ø5-Bohrung fuer Lanyard),
 Spachtel 18 x 23 x 1,5 mm mit gerundeten Vorderecken.
 Spachtel mittig auf der Griffachse, beidseitiger Anschliff.
-Drucklage: stehend, gerundetes Griffende unten (mit Stuetzstruktur drucken), Spachtel oben.
+Drucklage: liegend, Spachtel waagrecht in Griffmitte (mit Stuetzstruktur drucken).
+Magnet 10 x 3 mm flach in der Spachtelebene, Griffmitte: Hohlraum z = 8,4 ... 11,6 mm
+-> Druckpause bei 11,6 mm, Magnet einlegen.
 
 Aufruf: python3 hebelwerkzeug_gen.py [ausgabe.stl]   (numpy, scikit-image)
+Erzeugt zusaetzlich eine .3mf mit eingebetteten Druckeinstellungen (100 % Infill, 6 Waende,
+Stuetzen nur vom Bett) und Druckpause fuer den Magneten (Bambu Studio / Orca Slicer / PrusaSlicer).
 """
-import sys, struct
+import sys, os, struct
 import numpy as np
 from skimage.measure import marching_cubes
 
@@ -28,6 +32,10 @@ FASE_L       = 4.0    # Anschliff vorne (oben), 0 = kein Anschliff
 FASE_T       = 0.6    # Dicke an der Spitze (beidseitig angeschliffen)
 KANTE_R      = 1.5    # Rundung der vorderen Griffkante
 UEBERGANG_R  = 3.0    # Ausrundung Spachtel -> Griff
+MAGNET_D     = 10.0   # eingedruckter Neodym-Magnet (Druckpause!)
+MAGNET_H     = 3.0
+MAGNET_SPIEL = 0.2    # Zugabe auf Durchmesser und Hoehe
+MAGNET_POS   = 25.0   # Mitte Hohlraum ab Griffende (= Griffmitte)
 VOXEL        = 0.2    # Aufloesung (feiner als die 0,2-mm-Druckschichten noetig waere bringt nichts)
 
 R = GRIFF_D/2
@@ -62,6 +70,10 @@ def sdf(x, y, z):
     d = smin(griff, spatel, UEBERGANG_R)
     loch = np.sqrt((x-(GRIFF_L-LANYARD_ABST))**2 + y**2) - LANYARD_D/2   # quer zur Spachtelebene
     d = smax(d, -loch, 0.6)
+    # geschlossener Hohlraum fuer den Magneten, flach in der Spachtelebene (liegt beim liegenden Druck waagrecht)
+    xm = GRIFF_L - MAGNET_POS; hh = (MAGNET_H + MAGNET_SPIEL)/2
+    mag = np.maximum(np.sqrt((x - xm)**2 + y**2) - (MAGNET_D + MAGNET_SPIEL)/2, np.abs(z) - hh)
+    d = np.maximum(d, -mag)
     return d
 
 def build():
@@ -88,8 +100,7 @@ def build():
     vol = np.sum(np.einsum('ij,ij->i', t[:, 0], np.cross(t[:, 1], t[:, 2]))) / 6
     if vol < 0:
         t = t[:, [0, 2, 1]]; vol = -vol
-    # stehend: Griffende unten (z=0), Spachtelspitze oben
-    t = np.stack([t[:, :, 2], t[:, :, 1], GRIFF_L - t[:, :, 0]], axis=-1)
+    # liegend: Griffachse waagrecht, Spachtel in halber Griffhoehe
     t[:, :, 2] -= t[:, :, 2].min()
     return t, vol
 
@@ -100,9 +111,110 @@ def save_stl(path, t, name):
     with open(path, 'wb') as f:
         f.write(name.encode()[:80].ljust(80, b' ')); f.write(struct.pack('<I', len(t))); f.write(rec.tobytes())
 
+# ---------------------------------------------------------- 3MF mit Druckeinstellungen
+DRUCK = {   # fuer maximale Hebelkraefte: voll massiv, viele Wandlinien
+    'infill': 100, 'waende': 6, 'boden_deckel': 8, 'schicht': 0.2,
+}
+def save_3mf(path, t, name):
+    """3MF mit eingebetteten Objekt-Einstellungen (Bambu Studio / Orca Slicer und PrusaSlicer)
+    + Druckpause zum Einlegen des Magneten."""
+    import zipfile
+    q = np.round(t.reshape(-1, 3).astype(np.float32), 4)
+    uv, inv = np.unique(q, axis=0, return_inverse=True)
+    tri = inv.reshape(-1, 3)
+    vs = "\n".join(f'<vertex x="{x:.4f}" y="{y:.4f}" z="{z:.4f}"/>' for x, y, z in uv)
+    ts = "\n".join(f'<triangle v1="{a}" v2="{b}" v3="{c}"/>' for a, b, c in tri)
+    model = f"""<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xml:lang="de-DE" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
+<metadata name="Title">{name}</metadata>
+<metadata name="Designer">Stefan J. Kaiser DM5CQ / OE8KKS</metadata>
+<metadata name="License">CC BY-NC-SA 4.0</metadata>
+<resources><object id="1" type="model"><mesh><vertices>
+{vs}
+</vertices><triangles>
+{ts}
+</triangles></mesh></object></resources>
+<build><item objectid="1" transform="1 0 0 0 1 0 0 0 1 120 120 0"/></build>
+</model>"""
+    D = DRUCK
+    pause_z = round(R + (MAGNET_H + MAGNET_SPIEL)/2 + D['schicht'], 2)   # erste Schicht ueber dem Hohlraum
+    bambu = f"""<?xml version="1.0" encoding="UTF-8"?>
+<config>
+  <object id="1">
+    <metadata key="name" value="{name}"/>
+    <metadata key="extruder" value="1"/>
+    <metadata key="sparse_infill_density" value="{D['infill']}%"/>
+    <metadata key="sparse_infill_pattern" value="zig-zag"/>
+    <metadata key="wall_loops" value="{D['waende']}"/>
+    <metadata key="top_shell_layers" value="{D['boden_deckel']}"/>
+    <metadata key="bottom_shell_layers" value="{D['boden_deckel']}"/>
+    <metadata key="layer_height" value="{D['schicht']}"/>
+    <metadata key="enable_support" value="1"/>
+    <metadata key="support_on_build_plate_only" value="1"/>
+    <part id="1" subtype="normal_part">
+      <metadata key="name" value="{name}"/>
+    </part>
+  </object>
+</config>"""
+    bambu_pause = f"""<?xml version="1.0" encoding="utf-8"?>
+<custom_gcodes_per_layer>
+<plate>
+<plate_info id="1"/>
+<layer top_z="{pause_z}" type="1" extruder="1" color="" extra="Magnet 10x3 einlegen" gcode="M400 U1"/>
+<mode value="SingleExtruder"/>
+</plate>
+</custom_gcodes_per_layer>"""
+    prusa = f"""<?xml version="1.0" encoding="UTF-8"?>
+<config>
+ <object id="1" instances_count="1">
+  <metadata type="object" key="name" value="{name}"/>
+  <metadata type="object" key="fill_density" value="{D['infill']}%"/>
+  <metadata type="object" key="fill_pattern" value="rectilinear"/>
+  <metadata type="object" key="perimeters" value="{D['waende']}"/>
+  <metadata type="object" key="top_solid_layers" value="{D['boden_deckel']}"/>
+  <metadata type="object" key="bottom_solid_layers" value="{D['boden_deckel']}"/>
+  <metadata type="object" key="layer_height" value="{D['schicht']}"/>
+  <metadata type="object" key="support_material" value="1"/>
+  <metadata type="object" key="support_material_buildplate_only" value="1"/>
+  <volume firstid="0" lastid="{len(tri)-1}">
+   <metadata type="volume" key="name" value="{name}"/>
+   <metadata type="volume" key="volume_type" value="ModelPart"/>
+  </volume>
+ </object>
+</config>"""
+    prusa_pause = f"""<?xml version="1.0" encoding="utf-8"?>
+<custom_gcodes_per_print_z>
+<code print_z="{pause_z}" type="1" extruder="1" color="" extra="Magnet 10x3 einlegen" gcode="M601"/>
+<mode value="SingleExtruder"/>
+</custom_gcodes_per_print_z>"""
+    ct = """<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>
+<Default Extension="config" ContentType="text/xml"/>
+<Default Extension="xml" ContentType="text/xml"/>
+</Types>"""
+    rels = """<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
+</Relationships>"""
+    with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
+        z.writestr('[Content_Types].xml', ct)
+        z.writestr('_rels/.rels', rels)
+        z.writestr('3D/3dmodel.model', model)
+        z.writestr('Metadata/model_settings.config', bambu)
+        z.writestr('Metadata/custom_gcode_per_layer.xml', bambu_pause)
+        z.writestr('Metadata/Slic3r_PE_model.config', prusa)
+        z.writestr('Metadata/Prusa_Slicer_custom_gcode_per_print_z.xml', prusa_pause)
+    return pause_z
+
 if __name__ == '__main__':
     out = sys.argv[1] if len(sys.argv) > 1 else 'solarfilter_hebelwerkzeug.stl'
     t, vol = build()
     save_stl(out, t, 'solarfilter_hebelwerkzeug')
+    pz = save_3mf(os.path.splitext(out)[0] + '.3mf', t, 'solarfilter_hebelwerkzeug')
+    print(f"3MF mit Einstellungen: Infill {DRUCK['infill']} %, {DRUCK['waende']} Waende, Pause bei {pz} mm")
     mn, mx = t.reshape(-1, 3).min(0), t.reshape(-1, 3).max(0)
+    hh = (MAGNET_H + MAGNET_SPIEL)/2
+    print(f"Magnet-Hohlraum: z = {R-hh:.1f} ... {R+hh:.1f} mm -> Druckpause bei {R+hh:.1f} mm")
     print(f"{out}: {len(t)} Dreiecke, Volumen {vol/1000:.1f} cm3, Masse {mx[0]-mn[0]:.1f} x {mx[1]-mn[1]:.1f} x {mx[2]-mn[2]:.1f}")
