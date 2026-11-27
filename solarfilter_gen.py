@@ -17,6 +17,7 @@ Erzeugt (alle Masse in mm):
 Benoetigt nur numpy, scipy, matplotlib.  Aufruf: python3 solarfilter_gen.py [Ausgabeordner] [A|B]
 Variante A: Magnettaschen offen zur Trennfuge (Magnete buendig, einkleben)
 Variante B: Magnete innen hinter 0,6 mm Haut (Rueckrahmen: von Plexi eingeschlossen)
+Variante C: Magnete eingedruckt (geschlossene Hohlraeume, Druckpause; Frontrahmen wie B mit offener Tasche)
 """
 import sys, os, struct
 import numpy as np
@@ -55,6 +56,10 @@ MAG_H        = 3.0     # Magnet-Hoehe (ANNAHME 10x3 mm -> anpassen!)
 MAG_SPIEL    = 0.2     # Tasche = MAG_D + Spiel
 MAG_HAUT     = 0.6     # Variante B: geschlossene Haut zur Trennfuge (Traeger + Rueckrahmen), Magnete liegen dahinter
 VARIANTE     = 'B'     # 'A' = Magnettaschen offen zur Trennfuge (v4), 'B' = Magnete innen hinter 0,6 mm Haut (v5)
+                       # 'C' = Magnete eingedruckt: geschlossene Hohlraeume, Magnet in Druckpause einlegen
+EIN_Z0       = 0.6     # Variante C: Hohlraum ab 0,6 mm ueber dem Druckbett ...
+EIN_Z1       = 0.6 + MAG_H + MAG_SPIEL   # ... bis 3,8 mm -> Druckpause vor der ersten Schicht darueber
+PAUSEN = {}            # wird beim Erzeugen gefuellt: Teil -> Pausenhoehe
 MAG_POS      = 100.5   # Magnetreihe: 4 Ecken + 4 Kantenmitten
 RUECK_DICKE  = 4.5     # Rueckrahmen (haelt den Plattenstapel, traegt Magnete + Einschmelzmuttern)
 SCHR_LAENGE  = 15.0    # M3x15: Frontrahmen + Rueckrahmen + Mutter
@@ -361,12 +366,15 @@ def traeger(passring=False):
     zm = MAG_HAUT if innen else MAG_H + 0.1        # B: Taschen von der Kameraseite / A: offen zur Filterseite
     # Ueberstand Schraube hinter dem Rueckrahmen = Laenge - Frontrahmen - Rueckrahmen (+0,4 Luft)
     zn = SCHR_LAENGE - (FRONT_LIPPE + STAPEL) - RUECK_DICKE + 0.4
-    cuts = sorted(set([0, zm, zn, FLANSCH]))
+    cuts = sorted(set([0, zm, zn, FLANSCH] + ([EIN_Z0, EIN_Z1] if VARIANTE == 'C' else [])))
     for a, b in zip(cuts[:-1], cuts[1:]):
         L = [outer_n if b <= zn + 1e-9 else outer, ap] + wins
         if b > zn + 1e-9: L += holes
-        if (a >= zm - 1e-9) if innen else (b <= zm + 1e-9): L += mags
+        if VARIANTE == 'C':
+            if a >= EIN_Z0 - 1e-9 and b <= EIN_Z1 + 1e-9: L += mags
+        elif (a >= zm - 1e-9) if innen else (b <= zm + 1e-9): L += mags
         m.slab(a, b, L)
+    if VARIANTE == 'C': PAUSEN['traeger'] = EIN_Z1
     z = FLANSCH
     zs = z + SCHLITZ_START
     g0, g1 = z + NUT_Z[0], z + NUT_Z[1]
@@ -391,7 +399,12 @@ def rueckrahmen():
     ins = [m.loop(circle(x, y, SCHRAUBE_D/2, 32)) for x, y in screw_positions()]
     wins = corner_windows(m, ri + ROHR_WAND + 7.0)
     mags = [m.loop(circle(x, y, (MAG_D+MAG_SPIEL)/2, 64)) for x, y in magnet_positions()]
-    if VARIANTE == 'B':                            # Taschen offen zur Plexi-Seite, Haut zur Trennfuge
+    if VARIANTE == 'C':                            # eingedruckt: 0,6 Haut zur Plexi-Seite, 0,7 zur Trennfuge
+        m.slab(0, EIN_Z0, [outer, ap] + ins + wins)
+        m.slab(EIN_Z0, EIN_Z1, [outer, ap] + ins + wins + mags)
+        m.slab(EIN_Z1, RUECK_DICKE, [outer, ap] + ins + wins)
+        PAUSEN['rueckrahmen'] = EIN_Z1
+    elif VARIANTE == 'B':                          # Taschen offen zur Plexi-Seite, Haut zur Trennfuge
         zm = RUECK_DICKE - MAG_HAUT
         m.slab(0, zm, [outer, ap] + ins + wins + mags)
         m.slab(zm, RUECK_DICKE, [outer, ap] + ins + wins)
@@ -428,12 +441,16 @@ def rueckdeckel():
     zr = ZENTRIER_H + 0.4
     zm = MAG_H + 0.1
     zn = SCHR_LAENGE - (FRONT_LIPPE + STAPEL) - RUECK_DICKE + 0.4
-    cuts = sorted(set([0, zr, zm, zn, DECKEL_DICKE]))
+    C = VARIANTE == 'C'
+    cuts = sorted(set([0, zr, zn, DECKEL_DICKE] + ([EIN_Z0, EIN_Z1] if C else [zm])))
     for a, b in zip(cuts[:-1], cuts[1:]):
         L = [outer_n if b <= zn + 1e-9 else outer]
         if b <= zr + 1e-9: L.append(rec)
-        if b <= zm + 1e-9: L += mags
+        if C:
+            if a >= EIN_Z0 - 1e-9 and b <= EIN_Z1 + 1e-9: L += mags
+        elif b <= zm + 1e-9: L += mags
         m.slab(a, b, L)
+    if C: PAUSEN['schutz_rueckdeckel'] = EIN_Z1
     return m.build()
 
 def frontdeckel():
@@ -447,11 +464,21 @@ def frontdeckel():
     vor = MAG_H - FRONT_MAG_TIEFE                      # Ueberstand der Frontrahmen-Magnete
     zt = D - (MAG_H + vor + 0.2)                       # eigener Magnet unten, Gegenmagnet greift oben hinein
     zk = D - KOPF_H
-    cuts = sorted(set([0, zt, zk, D]))
-    for a, b in zip(cuts[:-1], cuts[1:]):
-        L = [outer_n if a >= zk - 1e-9 else outer]
-        if a >= zt - 1e-9: L += fm
-        m.slab(a, b, L)
+    if VARIANTE == 'C':
+        # oben offene Mulde fuer den 1 mm vorstehenden Frontrahmen-Magnet, darunter 0,6 Haut + geschlossener Hohlraum
+        zr = D - (vor + 0.2); zh1 = zr - MAG_HAUT; zh0 = zh1 - (MAG_H + MAG_SPIEL)
+        cuts = sorted(set([0, zh0, zh1, zr, zk, D]))
+        for a, b in zip(cuts[:-1], cuts[1:]):
+            L = [outer_n if a >= zk - 1e-9 else outer]
+            if (a >= zh0 - 1e-9 and b <= zh1 + 1e-9) or a >= zr - 1e-9: L += fm
+            m.slab(a, b, L)
+        PAUSEN['schutz_frontdeckel'] = zh1
+    else:
+        cuts = sorted(set([0, zt, zk, D]))
+        for a, b in zip(cuts[:-1], cuts[1:]):
+            L = [outer_n if a >= zk - 1e-9 else outer]
+            if a >= zt - 1e-9: L += fm
+            m.slab(a, b, L)
     m.slab(D, D + ZAPFEN_H, [plug])
     return m.build()
 
@@ -460,6 +487,7 @@ if __name__ == '__main__':
     out = sys.argv[1] if len(sys.argv) > 1 else '.'
     if len(sys.argv) > 2: VARIANTE = sys.argv[2].upper()
     print('Variante', VARIANTE)
+    globals()['VARIANTE'] = VARIANTE
     os.makedirs(out, exist_ok=True)
     for name, fn in [('solarfilter_frontrahmen', frontrahmen),
                      ('solarfilter_rueckrahmen', rueckrahmen),
@@ -472,3 +500,6 @@ if __name__ == '__main__':
         mn, mx = t.reshape(-1, 3).min(0), t.reshape(-1, 3).max(0)
         print(f"{name}: {len(t)} Dreiecke, Volumen {vol/1000:.1f} cm3, offene/fehlerhafte Kanten: {bad}, "
               f"Masse {mx[0]-mn[0]:.1f} x {mx[1]-mn[1]:.1f} x {mx[2]-mn[2]:.1f}")
+        pz = PAUSEN.get(name.replace('solarfilter_', ''))
+        if pz is not None:
+            print(f"   -> Magnet-Hohlraum bis {pz:.1f} mm: Druckpause vor der ersten Schicht ueber {pz:.1f} mm")

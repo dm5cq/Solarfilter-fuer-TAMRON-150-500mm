@@ -11,29 +11,45 @@ Autor: **Stefan J. Kaiser DM5CQ / OE8KKS** · Material: PETG-CF · Konstruktion 
 
 ![Schutzdeckel](bilder/schutzdeckel_vorschau.png)
 
-## Zwei Varianten
+## Drei Varianten
 
-Beide Varianten sind vollständig und gleichwertig – sie unterscheiden sich nur in **Träger** und **Rückrahmen**
-(Lage der 8 Magnettaschen an der Trennfuge Filterpaket ↔ Träger). Alle anderen Teile sind identisch.
+Alle Varianten sind vollständig und gleichwertig – sie unterscheiden sich nur darin, **wie die Neodym-Magnete
+(Ø10 × 3 mm) in den Teilen sitzen**. Frontrahmen und Passring sind in allen Varianten identisch.
 
-| | Variante A – Magnete außen | Variante B – Magnete innen |
+| | Variante A – Magnete außen | Variante B – Magnete innen | Variante C – Magnete eingedruckt |
+|---|---|---|---|
+| Ordner | [`variante_A_magnete_aussen`](stl/variante_A_magnete_aussen) | [`variante_B_magnete_innen`](stl/variante_B_magnete_innen) | [`variante_C_magnete_eingedruckt`](stl/variante_C_magnete_eingedruckt) |
+| Träger, Rückrahmen | Taschen offen zur Trennfuge, Magnet bündig | Taschen offen nach außen (Kamera- bzw. Plexi-Seite), 0,6 mm Haut zur Trennfuge | geschlossene Hohlräume, rundum eingeschlossen |
+| Rückdeckel, Frontdeckel | Taschen offen | Taschen offen | geschlossene Hohlräume |
+| Magnete | einkleben | Rückrahmen eingeschlossen, sonst einkleben | **in Druckpause einlegen**, kein Kleben, nicht mehr entnehmbar |
+| Haltekraft | maximal (Magnet auf Magnet) | etwas geringer (1,2 mm Abstand) | etwas geringer (1,3 mm Abstand) |
+| Druck | beliebig | 0,2 mm Schichten | 0,2 mm Schichten + Druckpause |
+
+### Variante C – Druckpausen
+
+| Teil | Hohlraum (Höhe über Druckbett) | Pause vor der Schicht über |
 |---|---|---|
-| Ordner | [`stl/variante_A_magnete_aussen`](stl/variante_A_magnete_aussen) | [`stl/variante_B_magnete_innen`](stl/variante_B_magnete_innen) |
-| Träger | Taschen offen zur Filterseite, Magnet bündig | Taschen offen zur Kameraseite, 0,6 mm Haut zur Filterseite |
-| Rückrahmen | Taschen offen zum Träger, Magnet bündig | Taschen offen zur Plexi-Seite, 0,6 mm Haut zum Träger |
-| Magnete | müssen eingeklebt werden | Rückrahmen: von Plexi + Frontrahmen eingeschlossen, Kleben optional; Träger: einkleben empfohlen |
-| Haltekraft | maximal (Magnet auf Magnet) | etwas geringer (1,2 mm Abstand), Trennfuge glatt |
-| Druck | beliebige Schichthöhe | 0,2 mm Schichthöhe (Haut = 3 Schichten) |
+| Träger | 0,6 – 3,8 mm | **3,8 mm** (bei 0,2 mm: Schicht 20 / 4,0 mm) |
+| Rückrahmen | 0,6 – 3,8 mm | **3,8 mm** |
+| Rückdeckel | 0,6 – 3,8 mm | **3,8 mm** |
+| Frontdeckel | 1,0 – 4,2 mm | **4,2 mm** (Schicht 22 / 4,4 mm) |
+| Frontrahmen | – (Lippe nur 2,5 mm dick: offene Tasche wie Variante B, Magnet einkleben, steht 1 mm vor) | – |
 
-![Magnete Variante B](bilder/magnet_v5_schnitt.png)
+**Polung:** Alle Magnete vorher in einer Säule stapeln und die Oberseite jedes Magneten markieren.
+In Träger, Rückrahmen, Rückdeckel und Frontdeckel jeweils mit der **Markierung nach unten** (zum Druckbett) einlegen,
+im Frontrahmen mit der **Markierung nach außen** einkleben. Dann passt jede Kombination zusammen.
+Kein Stahlwerkzeug verwenden; Magnete vollständig in die Taschen drücken, ein Tropfen Sekundenkleber verhindert,
+dass eine Stahldüse sie beim Weiterdrucken anzieht.
+
+![Variante C](bilder/magnete_eingedruckt_schnitt.png)
 
 ## Teile (je Variante im Ordner `stl/variante_…`)
 
 | Datei | Funktion | Drucklage |
 |---|---|---|
-| `solarfilter_traeger.stl` | bleibt auf der GLB: Flansch mit 8 Magnettaschen (A/B siehe oben) + U-Taschen für Muttern, geschlitztes Rohr Ø114,05 | Flansch aufs Bett |
+| `solarfilter_traeger.stl` | bleibt auf der GLB: Flansch mit 8 Magnettaschen (A/B/C siehe oben) + U-Taschen für Muttern, geschlitztes Rohr Ø114,05 | Flansch aufs Bett |
 | `solarfilter_frontrahmen.stl` | Sonnenseite, Tasche 201 × 201 × 5 mm für Plexi / Folie / Plexi, 4 Magnete in den Ecken | Sonnenseite aufs Bett |
-| `solarfilter_rueckrahmen.stl` | hinterer Rahmen, 8 Magnettaschen (A/B siehe oben), Zentrierring | Plexi-Seite aufs Bett |
+| `solarfilter_rueckrahmen.stl` | hinterer Rahmen, 8 Magnettaschen (A/B/C siehe oben), Zentrierring | Plexi-Seite aufs Bett |
 | `solarfilter_schutz_frontdeckel.stl` | Transportschutz vorne, magnetisch (4 Magnete), Zapfen im Fenster | Außenseite aufs Bett |
 | `solarfilter_schutz_rueckdeckel.stl` | Transportschutz hinten, magnetisch | Magnetseite aufs Bett |
 | `solarfilter_passring.stl` | nur Passprobe auf der GLB (wird nicht eingebaut) | beliebig |
@@ -68,8 +84,9 @@ Transport: Frontdeckel ‖ Filterpaket ‖ Rückdeckel (oder statt Rückdeckel d
 `solarfilter_gen.py` erzeugt alle STLs neu (nur `numpy`, `scipy`, `matplotlib`):
 
 ```
-python3 solarfilter_gen.py stl/variante_A_magnete_aussen A
-python3 solarfilter_gen.py stl/variante_B_magnete_innen  B
+python3 solarfilter_gen.py stl/variante_A_magnete_aussen      A
+python3 solarfilter_gen.py stl/variante_B_magnete_innen       B
+python3 solarfilter_gen.py stl/variante_C_magnete_eingedruckt C
 ```
 
 Wichtige Parameter oben im Skript: `GLB_D`, `SPIEL_D`, `STAPEL`, `MAG_D`/`MAG_H`, `SCHR_LAENGE`, `ZAPFEN_SP`.
