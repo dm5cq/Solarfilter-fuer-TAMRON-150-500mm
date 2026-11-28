@@ -7,9 +7,10 @@ Lizenz: CC BY-NC-SA 4.0 (siehe LICENSE.md)
 Griff Ø20 x 50 mm (hinten halbkugelig gerundet, Ø5-Bohrung fuer Lanyard),
 Spachtel 18 x 23 x 1,5 mm mit gerundeten Vorderecken.
 Spachtel mittig auf der Griffachse, beidseitiger Anschliff.
-Drucklage: liegend, Spachtel waagrecht in Griffmitte (mit Stuetzstruktur drucken).
-Magnet 10 x 3 mm flach in der Spachtelebene, Griffmitte: Hohlraum z = 8,4 ... 11,6 mm
--> Druckpause bei 11,6 mm, Magnet einlegen.
+Griff oben und unten flach (Dicke 7,2 mm), Magnet 10 x 3 mm flach in der Spachtelebene,
+je 2 mm Wand oben und unten.
+Drucklage: liegend auf der flachen Griffseite, Stuetzen nur unter der Spachtel.
+Hohlraum z = 2,0 ... 5,2 mm -> Druckpause vor der ersten Schicht ueber 5,2 mm, Magnet einlegen.
 
 Aufruf: python3 hebelwerkzeug_gen.py [ausgabe.stl]   (numpy, scikit-image)
 Erzeugt zusaetzlich eine .3mf mit eingebetteten Druckeinstellungen (100 % Infill, 6 Waende,
@@ -36,6 +37,8 @@ MAGNET_D     = 10.0   # eingedruckter Neodym-Magnet (Druckpause!)
 MAGNET_H     = 3.0
 MAGNET_SPIEL = 0.2    # Zugabe auf Durchmesser und Hoehe
 MAGNET_POS   = 25.0   # Mitte Hohlraum ab Griffende (= Griffmitte)
+MAGNET_WAND  = 2.0    # Wand ueber und unter dem Magneten (max. 2 mm) -> bestimmt die Griffdicke
+GRIFF_T      = MAGNET_H + MAGNET_SPIEL + 2*MAGNET_WAND   # Griff oben und unten flach: 7,2 mm
 VOXEL        = 0.2    # Aufloesung (feiner als die 0,2-mm-Druckschichten noetig waere bringt nichts)
 
 R = GRIFF_D/2
@@ -68,6 +71,7 @@ def sdf(x, y, z):
         dick = FASE_T + (SPATEL_T-FASE_T)*t
     spatel = np.maximum(d2, np.abs(z) - dick/2)
     d = smin(griff, spatel, UEBERGANG_R)
+    d = np.maximum(d, np.abs(z) - GRIFF_T/2)              # Griff oben und unten plan
     loch = np.sqrt((x-(GRIFF_L-LANYARD_ABST))**2 + y**2) - LANYARD_D/2   # quer zur Spachtelebene
     d = smax(d, -loch, 0.6)
     # geschlossener Hohlraum fuer den Magneten, flach in der Spachtelebene (liegt beim liegenden Druck waagrecht)
@@ -80,7 +84,7 @@ def build():
     v = VOXEL
     xs = np.arange(-SPATEL_L-1.0+0.013, GRIFF_L+1.0+v, v)
     ys = np.arange(-SPATEL_B/2-1.5+0.017, SPATEL_B/2+1.5+v, v)
-    zs = np.arange(-R-1.0+0.011, R+1.0+v, v)
+    zs = np.arange(-GRIFF_T/2-1.0+0.011, GRIFF_T/2+1.0+v, v)
     X, Y, Z = np.meshgrid(xs, ys, zs, indexing='ij')
     F = sdf(X, Y, Z).astype(np.float32)
     F[0], F[-1], F[:, 0], F[:, -1], F[:, :, 0], F[:, :, -1] = 1, 1, 1, 1, 1, 1
@@ -137,7 +141,7 @@ def save_3mf(path, t, name):
 <build><item objectid="1" transform="1 0 0 0 1 0 0 0 1 120 120 0"/></build>
 </model>"""
     D = DRUCK
-    pause_z = round(R + (MAGNET_H + MAGNET_SPIEL)/2 + D['schicht'], 2)   # erste Schicht ueber dem Hohlraum
+    pause_z = round(GRIFF_T/2 + (MAGNET_H + MAGNET_SPIEL)/2 + D['schicht'], 2)   # erste Schicht ueber dem Hohlraum
     bambu = f"""<?xml version="1.0" encoding="UTF-8"?>
 <config>
   <object id="1">
@@ -216,5 +220,5 @@ if __name__ == '__main__':
     print(f"3MF mit Einstellungen: Infill {DRUCK['infill']} %, {DRUCK['waende']} Waende, Pause bei {pz} mm")
     mn, mx = t.reshape(-1, 3).min(0), t.reshape(-1, 3).max(0)
     hh = (MAGNET_H + MAGNET_SPIEL)/2
-    print(f"Magnet-Hohlraum: z = {R-hh:.1f} ... {R+hh:.1f} mm -> Druckpause bei {R+hh:.1f} mm")
+    print(f"Magnet-Hohlraum: z = {GRIFF_T/2-hh:.1f} ... {GRIFF_T/2+hh:.1f} mm -> Druckpause ueber {GRIFF_T/2+hh:.1f} mm")
     print(f"{out}: {len(t)} Dreiecke, Volumen {vol/1000:.1f} cm3, Masse {mx[0]-mn[0]:.1f} x {mx[1]-mn[1]:.1f} x {mx[2]-mn[2]:.1f}")
